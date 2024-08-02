@@ -9,11 +9,14 @@ Original Mario Manual: https://www.thegameisafootarcade.com/wp-content/uploads/2
 import json
 import logging
 import random
+import time
 
 import cv2
 from mario_environment import MarioEnvironment
 from pyboy.utils import WindowEvent
 
+# Added libraries
+import pyboy
 
 class MarioController(MarioEnvironment):
     """
@@ -80,6 +83,9 @@ class MarioController(MarioEnvironment):
 
         self.pyboy.send_input(self.release_button[action])
 
+        
+       
+
 
 class MarioExpert:
     """
@@ -101,14 +107,24 @@ class MarioExpert:
 
         self.video = None
 
+        self.initial_x_pos = self.environment.get_x_position()
+
     def choose_action(self):
         state = self.environment.game_state()
         frame = self.environment.grab_frame()
         game_area = self.environment.game_area()
 
+        current_environment = self.environment.pyboy.game_wrapper
+        
+        print(current_environment.game_area())
+
+        if 15 in current_environment.game_area():
+           print("Bitch as goopher in frame bitch as fucker")
+
         # Implement your code here to choose the best action
-        # time.sleep(0.1)
-        return random.randint(0, len(self.environment.valid_actions) - 1)
+        time.sleep(5)
+        #return random.randint(0, len(self.environment.valid_actions) - 1)
+        return 2
 
     def step(self):
         """
