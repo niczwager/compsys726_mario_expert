@@ -16,7 +16,7 @@ from mario_environment import MarioEnvironment
 from pyboy.utils import WindowEvent
 
 # Added libraries
-import pyboy
+import numpy as np
 
 class MarioController(MarioEnvironment):
     """
@@ -109,20 +109,68 @@ class MarioExpert:
 
         self.initial_x_pos = self.environment.get_x_position()
 
+        # Pre-defined sprite numbers based on pyboy documentation
+        self.mario_sprite = 1
+        self.goopher_sprite = 15
+        self.floor_sprite = 10
+        self.pipe_sprite = 14
+        self.block_sprite = 10
+
+    def find_position(self, current_environment, sprite):
+        '''
+        Script to find the current location of Mario Sprite within the simplified game frame
+
+        Mario is represented by:
+        [1 1]
+        [1 1]
+
+        The potential search grid is 20 wide by 16 
+        '''
+        current_environment = np.array(current_environment.game_area())
+
+        rows, cols = current_environment.shape
+
+        for i in range(rows):
+            for j in range(cols):
+                if current_environment[i][j] == sprite:
+                    sprite_position = [i,j]
+
+        print(sprite_position)
+
+        return sprite_position
+
+
     def choose_action(self):
+        # For debugging
+        #time.sleep(1)
+
         state = self.environment.game_state()
         frame = self.environment.grab_frame()
         game_area = self.environment.game_area()
 
         current_environment = self.environment.pyboy.game_wrapper
+        current_environment_arr = current_environment.game_area()
         
-        print(current_environment.game_area())
+        #print(current_environment.game_area())
+        print(current_environment)
 
-        if 15 in current_environment.game_area():
+        # Locating Mario's position
+        mario_position = self.find_position(current_environment, self.mario_sprite)
+
+        # Checking if Goopher present
+        if self.goopher_sprite in current_environment.game_area():
            print("Bitch as goopher in frame bitch as fucker")
 
-        # Implement your code here to choose the best action
-        time.sleep(5)
+           # Checking if need to jump
+           goopher_position = self.find_position(current_environment, self.goopher_sprite)
+
+            # Checking if goopher in front of Mario and jump required
+           if goopher_position[1] - mario_position[1] <= 3 and goopher_position[1] > mario_position[1]:
+               print('jumping')
+               return 4 # Jump
+        elif current_environment_arr[mario_position[0], mario_position[1]+1] != 0:
+            return 4 # Jumping over walls etc.
+
         #return random.randint(0, len(self.environment.valid_actions) - 1)
         return 2
 
