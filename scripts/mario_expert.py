@@ -116,8 +116,10 @@ class MarioExpert:
         self.pipe_sprite = 14
         self.block_sprite = 10
 
+        self.pipe_checker = False
+
+    '''
     def find_position(self, current_environment, sprite):
-        '''
         Script to find the current location of Mario Sprite within the simplified game frame
 
         Mario is represented by:
@@ -125,7 +127,7 @@ class MarioExpert:
         [1 1]
 
         The potential search grid is 20 wide by 16 
-        '''
+    
         current_environment = np.array(current_environment.game_area())
 
         rows, cols = current_environment.shape
@@ -135,14 +137,69 @@ class MarioExpert:
                 if current_environment[i][j] == sprite:
                     sprite_position = [i,j]
 
-        print(sprite_position)
+        #print(sprite_position)
 
         return sprite_position
+    '''
+    def find_position(self, current_environment, sprite):
+        '''
+        Script to find the current location of Mario Sprite within the simplified game frame.
+
+        Mario is represented by:
+        [1 1]
+        [1 1]
+
+        The potential search grid is 20 wide by 16 high.
+        '''
+        current_environment = np.array(current_environment.game_area())
+
+        rows, cols = current_environment.shape
+
+        count = 0
+        sprite_position = None
+
+        # Start searching from the bottom-right and move backward
+        for i in range(rows - 1, -1, -1):  # Iterate from rows-1 to 0
+            for j in range(cols - 1, -1, -1):  # Iterate from cols-1 to 0
+                if current_environment[i][j] == sprite:
+                    if sprite == self.mario_sprite:
+                        sprite_position = [i, j]
+                        return sprite_position, count
+                    
+                    sprite_position = [i, j]
+                    count = count + 1
+                    #return sprite_position  # Return as soon as a match is found
+
+        return sprite_position, count
+
+    def goopher_case(self, current_environment, mario_position):
+        print("Bitch as goopher in frame bitch as fucker")
+
+        # Checking if need to jump
+        goopher_position = self.find_position(current_environment, self.goopher_sprite)
+
+        # Checking if goopher in front of Mario and jump required
+        if goopher_position[1] - mario_position[1] <= 3 and goopher_position[1] > mario_position[1]:
+            print('jumping')
+            return 4 # Jump
+        else:
+            return 2
+        
+    def pipe_case(self, current_environment, mario_position):
+        print("Found that bitch as pipe wagwan")
+
+        # Checking if pipe section hasn't been entered yet
+        if self.pipe_checker == False:
+            self.pipe_checker = True
+            return 0 # Do nothing
+        else:
+            # Continue running forward
+            return 2
 
 
     def choose_action(self):
         # For debugging
-        #time.sleep(1)
+        time.sleep(0.15)
 
         state = self.environment.game_state()
         frame = self.environment.grab_frame()
@@ -151,25 +208,66 @@ class MarioExpert:
         current_environment = self.environment.pyboy.game_wrapper
         current_environment_arr = current_environment.game_area()
         
-        #print(current_environment.game_area())
-        print(current_environment)
+        print(current_environment.game_area())
+        #print(current_environment)
 
         # Locating Mario's position
-        mario_position = self.find_position(current_environment, self.mario_sprite)
+        mario_position, _ = self.find_position(current_environment, self.mario_sprite)
 
+        # TODO: Anyone but pipe in front of Mario just jump, dont' need a special goopher case for this
+        # TODO: implement pause when there is a pipe in front, run then jump - this will require a variable counter
+
+        print("Mario's position: " + str(mario_position) + " In front of Mario: " + str(current_environment_arr[mario_position[0], mario_position[1]+1]))
+
+        goopher_position, goopher_count = self.find_position(current_environment, self.goopher_sprite)
+
+        print("Goopher position: " + str(goopher_position) + " Goopher count: " + str(goopher_count))
+
+        dble_gpher_dist = 12
+        gphr_pause = 6
+
+        # If anything in front of Mario - jump
+        if current_environment_arr[mario_position[0], mario_position[1]+1] != 0 and goopher_count != 2:
+            print('Jumping')
+            return 4 # jump
+        
+        elif goopher_count == 2:
+            print("Two gophers")
+            if goopher_position[1] - mario_position[1] <= dble_gpher_dist and goopher_position[1] - mario_position[1] >= dble_gpher_dist - gphr_pause:
+                print("Pausing")
+                return 0 # Do nothing
+            elif current_environment_arr[mario_position[0], mario_position[1]+1] != 0:
+                print('Jumping - in goopher')
+                return 4
+
+        '''
         # Checking if Goopher present
         if self.goopher_sprite in current_environment.game_area():
-           print("Bitch as goopher in frame bitch as fucker")
+            print("Bitch as goopher in frame bitch as fucker")
 
-           # Checking if need to jump
-           goopher_position = self.find_position(current_environment, self.goopher_sprite)
+            # Checking if need to jump
+            goopher_position = self.find_position(current_environment, self.goopher_sprite)
 
             # Checking if goopher in front of Mario and jump required
-           if goopher_position[1] - mario_position[1] <= 3 and goopher_position[1] > mario_position[1]:
-               print('jumping')
-               return 4 # Jump
-        elif current_environment_arr[mario_position[0], mario_position[1]+1] != 0:
+            if goopher_position[1] - mario_position[1] <= 3 and goopher_position[1] > mario_position[1]:
+                print('jumping')
+                return 4 # Jump
+           
+        # Continue running and jumping over anything that isn't a pipe infront
+        #elif current_environment_arr[mario_position[0], mario_position[1]+2] == self.goopher_sprite or current_environment_arr[mario_position[0], mario_position[1]+2] == self.floor_sprite:
+        elif current_environment_arr[mario_position[0], mario_position[1]+2] != 0 and current_environment_arr[mario_position[0], mario_position[1]+2] != self.pipe_sprite:
+            #self.pipe_checker = False
+            print('jumping')
+            print(current_environment_arr[mario_position[0], mario_position[1]+2])
             return 4 # Jumping over walls etc.
+
+        # Special case for when pipe in front of Mario
+        elif current_environment_arr[mario_position[0], mario_position[1]+2] == self.pipe_sprite:
+            # Send do nothing for 2 goes
+            # Then run foward and jump
+            print('entered pipe in front section')
+        '''
+
 
         #return random.randint(0, len(self.environment.valid_actions) - 1)
         return 2
