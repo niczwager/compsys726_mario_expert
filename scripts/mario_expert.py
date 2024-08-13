@@ -199,7 +199,7 @@ class MarioExpert:
 
     def choose_action(self):
         # For debugging
-        time.sleep(0.15)
+        time.sleep(0.1)
 
         state = self.environment.game_state()
         frame = self.environment.grab_frame()
@@ -223,14 +223,15 @@ class MarioExpert:
 
         print("Goopher position: " + str(goopher_position) + " Goopher count: " + str(goopher_count))
 
-        dble_gpher_dist = 12
-        gphr_pause = 6
+        dble_gpher_dist = 15
+        gphr_pause = 10
 
         # If anything in front of Mario - jump
         if current_environment_arr[mario_position[0], mario_position[1]+1] != 0 and goopher_count != 2:
             print('Jumping')
             return 4 # jump
         
+        # Special double goopher case
         elif goopher_count == 2:
             print("Two gophers")
             if goopher_position[1] - mario_position[1] <= dble_gpher_dist and goopher_position[1] - mario_position[1] >= dble_gpher_dist - gphr_pause:
@@ -239,6 +240,13 @@ class MarioExpert:
             elif current_environment_arr[mario_position[0], mario_position[1]+1] != 0:
                 print('Jumping - in goopher')
                 return 4
+        
+        # Speical need to jump over floor case
+        elif current_environment_arr[mario_position[0]+1, mario_position[1]+2] != 10 and mario_position[0] == 13:
+            print('Jumping over floor')
+            print(current_environment_arr[mario_position[0+1], mario_position[1]+1])
+            return 4
+
 
         '''
         # Checking if Goopher present
