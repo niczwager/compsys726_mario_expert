@@ -75,20 +75,24 @@ class MarioController(MarioEnvironment):
         You can change the action type to whatever you want or need just remember the base control of the game is pushing buttons
         """
 
-        self.act_freq = freq if freq is not None else 10
+        #self.act_freq = freq if freq is not None else 10
 
         self.print_freq()
 
         # Simply toggles the buttons being on or off for a duration of act_freq
         self.pyboy.send_input(self.valid_actions[action])
 
-        for _ in range(freq if freq is not None else self.act_freq):
+        for _ in range(self.act_freq):
             self.pyboy.tick()
 
         self.pyboy.send_input(self.release_button[action])
     
+    def set_freq(self, freq):
+        self.act_freq = freq
+
     def print_freq(self):
-        print("Frequency is: " + str(self.act_freq))
+        if self.act_freq is not 10:
+            print("Frequency is now: " + str(self.act_freq))
 
         
        
@@ -123,7 +127,7 @@ class MarioExpert:
         self.pipe_sprite = 14
         self.block_sprite = 10
 
-        self.pipe_checker = False
+        self.pipe_checker = True
 
     '''
     def find_position(self, current_environment, sprite):
@@ -191,31 +195,6 @@ class MarioExpert:
                     count += 1
 
         return sprite_position, count
-
-    def goopher_case(self, current_environment, mario_position):
-        print("Bitch as goopher in frame bitch as fucker")
-
-        # Checking if need to jump
-        goopher_position = self.find_position(current_environment, self.goopher_sprite)
-
-        # Checking if goopher in front of Mario and jump required
-        if goopher_position[1] - mario_position[1] <= 3 and goopher_position[1] > mario_position[1]:
-            print('jumping')
-            return 4 # Jump
-        else:
-            return 2
-        
-    def pipe_case(self, current_environment, mario_position):
-        print("Found that bitch as pipe wagwan")
-
-        # Checking if pipe section hasn't been entered yet
-        if self.pipe_checker == False:
-            self.pipe_checker = True
-            return 0 # Do nothing
-        else:
-            # Continue running forward
-            return 2
-
 
     def choose_action(self):
         # For debugging
@@ -293,37 +272,18 @@ class MarioExpert:
             return 4, None
         
         elif floor_count == 3:
+            #self.environment.set_freq(15)
+
+            if floor_position[1] - mario_position[1] <= 2:
+                return 4, None
+            '''
+            # Moving backward to try and disrupt when mario jumps
+            if mario_position[1] <= 10 and mario_position[1] >= 5 and self.pipe_checker == True:
+                print('Moving backwards')
+                self.pipe_checker = False
+                return 1, None 
             return 0, None
-
-
-        '''
-        # Checking if Goopher present
-        if self.goopher_sprite in current_environment.game_area():
-            print("Bitch as goopher in frame bitch as fucker")
-
-            # Checking if need to jump
-            goopher_position = self.find_position(current_environment, self.goopher_sprite)
-
-            # Checking if goopher in front of Mario and jump required
-            if goopher_position[1] - mario_position[1] <= 3 and goopher_position[1] > mario_position[1]:
-                print('jumping')
-                return 4 # Jump
-           
-        # Continue running and jumping over anything that isn't a pipe infront
-        #elif current_environment_arr[mario_position[0], mario_position[1]+2] == self.goopher_sprite or current_environment_arr[mario_position[0], mario_position[1]+2] == self.floor_sprite:
-        elif current_environment_arr[mario_position[0], mario_position[1]+2] != 0 and current_environment_arr[mario_position[0], mario_position[1]+2] != self.pipe_sprite:
-            #self.pipe_checker = False
-            print('jumping')
-            print(current_environment_arr[mario_position[0], mario_position[1]+2])
-            return 4 # Jumping over walls etc.
-
-        # Special case for when pipe in front of Mario
-        elif current_environment_arr[mario_position[0], mario_position[1]+2] == self.pipe_sprite:
-            # Send do nothing for 2 goes
-            # Then run foward and jump
-            print('entered pipe in front section')
-        '''
-
+            '''
 
         #return random.randint(0, len(self.environment.valid_actions) - 1)
         return 2, None
