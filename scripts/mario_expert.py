@@ -66,7 +66,7 @@ class MarioController(MarioEnvironment):
         self.valid_actions = valid_actions
         self.release_button = release_button
 
-    def run_action(self, action: int) -> None:
+    def run_action(self, action: int, freq) -> None:
         """
         This is a very basic example of how this function could be implemented
 
@@ -75,13 +75,20 @@ class MarioController(MarioEnvironment):
         You can change the action type to whatever you want or need just remember the base control of the game is pushing buttons
         """
 
+        self.act_freq = freq if freq is not None else 10
+
+        self.print_freq()
+
         # Simply toggles the buttons being on or off for a duration of act_freq
         self.pyboy.send_input(self.valid_actions[action])
 
-        for _ in range(self.act_freq):
+        for _ in range(freq if freq is not None else self.act_freq):
             self.pyboy.tick()
 
         self.pyboy.send_input(self.release_button[action])
+    
+    def print_freq(self):
+        print("Frequency is: " + str(self.act_freq))
 
         
        
@@ -158,15 +165,24 @@ class MarioExpert:
         count = 0
         sprite_position = None
 
-        # Start searching from the bottom-right and move backward
-        for i in range(rows - 1, -1, -1):  # Iterate from rows-1 to 0
-            for j in range(cols - 1, -1, -1):  # Iterate from cols-1 to 0
+
+        # Single loop to find the sprite or floor gaps
+        for i in range(rows - 1, -1, -1):
+            for j in range(cols - 1, -1, -1):  # Iterate across all columns
                 if current_environment[i][j] == sprite:
-                    if sprite == self.mario_sprite:
-                        sprite_position = [i, j]
-                        return sprite_position, count
+                    if sprite != self.goopher_sprite:
+                        if sprite == 0: # Checking for gap in floor
+                            if i != 15:
+                                return None, count 
+                            else:
+                                if current_environment[i, j-1] == 0 and current_environment[i, j-2] == 10:
+                                    return [i,j], 2
+                                else:
+                                    return [i,j], 3
+                        else:
+                            return [i, j], count  # Return immediately if Mario is found
                     
-                    # If sprite_position is None, initialize it as a list
+                    # Initialize sprite_position as a list if it is None
                     if sprite_position is None:
                         sprite_position = []
 
@@ -203,7 +219,7 @@ class MarioExpert:
 
     def choose_action(self):
         # For debugging
-        time.sleep(0.25)
+        time.sleep(0.01)
 
         state = self.environment.game_state()
         frame = self.environment.grab_frame()
@@ -224,30 +240,39 @@ class MarioExpert:
 
         print("Current Mario y postion: " + str(mario_position[0]) + " What's below Mario: " + str(current_environment_arr[mario_position[0]+1, mario_position[1]]))
 
+        floor_position, floor_count = self.find_position(current_environment, 0) # Right most position of a floor tile
+
+        # Checking floor is actually in front of Mario and close enough
+        if floor_position is not None and abs(floor_position[1] - mario_position[1]) >= 5:
+            floor_position = None
+            floor_count = 0
+
+        print("Floor position is: " + str(floor_position) + " Floor count: " + str(floor_count)) 
+
         dble_gpher_dist = 15
         gphr_pause = 10
 
         # If anything in front of Mario - jump
         if current_environment_arr[mario_position[0], mario_position[1]+1] != 0 and goopher_count != 2:
             print('Jumping')
-            return 4 # jump
+            return 4, None # jump
         
         # Special double goopher case
         elif goopher_count == 2 and current_environment_arr[mario_position[0]+1, mario_position[1]] == 10:
             print("Two gophers")
             if goopher_position[1][1] - mario_position[1] <= dble_gpher_dist and goopher_position[1][1] - mario_position[1] >= dble_gpher_dist - gphr_pause and goopher_position[1][1] >= mario_position[1] and goopher_position[0][1] >= mario_position[1]:
                 print("Pausing")
-                return 0 # Do nothing
+                return 0, None # Do nothing
             elif current_environment_arr[mario_position[0], mario_position[1]+1] != 0:
                 print('Jumping - in goopher')
-                return 4
+                return 4, None
         
         # Speical need to jump over floor case
-        #elif current_environment_arr[mario_position[0]+1, mario_position[1]+2] != 10 and mario_position[0] == 13:
-        elif current_environment_arr[15, mario_position[1]+2] != 10 and mario_position[0] == 13:
+        elif current_environment_arr[15, mario_position[1]+2] != 10 and mario_position[0] == 13 and floor_count == 2:
+        #elif floor_position[0] == 15 and floor_position[1] <= 12 and floor_position[1] - mario_position[1] >= 2:
             print('Jumping over floor')
             print(current_environment_arr[mario_position[0+1], mario_position[1]+1])
-            return 4
+            return (4, 30) if current_environment_arr[mario_position[0], mario_position[1]+5] == 10 else (4, None) 
         
         # On any pipe small pipe - pause then jump
         #elif mario_position[0] < 13 and mario_position[0] > 10 and current_environment_arr[mario_position[0]+1, mario_position[1]] == 14:
@@ -257,15 +282,18 @@ class MarioExpert:
                 print('Entered 2')
                 if abs(goopher_position[0][1] - mario_position[1]) <= 1:
                     print('Entered 3')
-                    return 4
+                    return 4, None
                 else:
                     print('Entered 4')
-                    return 0
+                    return 0, None
                 
         # Bouncy bug bitches in front of Mario
         elif current_environment_arr[mario_position[0]-2, mario_position[1]+4] == 18:
             print('Avoiding bug bitches')
-            return 4
+            return 4, None
+        
+        elif floor_count == 3:
+            return 0, None
 
 
         '''
@@ -298,7 +326,7 @@ class MarioExpert:
 
 
         #return random.randint(0, len(self.environment.valid_actions) - 1)
-        return 2
+        return 2, None
 
     def step(self):
         """
@@ -308,10 +336,10 @@ class MarioExpert:
         """
 
         # Choose an action - button press or other...
-        action = self.choose_action()
+        action, freq = self.choose_action()
 
         # Run the action on the environment
-        self.environment.run_action(action)
+        self.environment.run_action(action, freq)
 
     def play(self):
         """
