@@ -91,7 +91,7 @@ class MarioController(MarioEnvironment):
         self.act_freq = freq
 
     def print_freq(self):
-        if self.act_freq is not 10:
+        if self.act_freq != 10:
             print("Frequency is now: " + str(self.act_freq))
 
         
@@ -127,7 +127,7 @@ class MarioExpert:
         self.pipe_sprite = 14
         self.block_sprite = 10
 
-        self.pipe_checker = True
+        self.boolean_toggle = False
 
     '''
     def find_position(self, current_environment, sprite):
@@ -179,10 +179,10 @@ class MarioExpert:
                             if i != 15:
                                 return None, count 
                             else:
-                                if current_environment[i, j-1] == 0 and current_environment[i, j-2] == 10:
-                                    return [i,j], 2
-                                else:
+                                if current_environment[i, j-1] == 0 and current_environment[i, j-2] == 0:
                                     return [i,j], 3
+                                else:
+                                    return [i,j], 2
                         else:
                             return [i, j], count  # Return immediately if Mario is found
                     
@@ -198,7 +198,7 @@ class MarioExpert:
 
     def choose_action(self):
         # For debugging
-        time.sleep(0.01)
+        #time.sleep(0.01)
 
         state = self.environment.game_state()
         frame = self.environment.grab_frame()
@@ -221,8 +221,11 @@ class MarioExpert:
 
         floor_position, floor_count = self.find_position(current_environment, 0) # Right most position of a floor tile
 
+        print("Floor position is: " + str(floor_position) + " Floor count: " + str(floor_count)) 
+
         # Checking floor is actually in front of Mario and close enough
-        if floor_position is not None and abs(floor_position[1] - mario_position[1]) >= 5:
+        if floor_position is not None and abs(floor_position[1]-2 - mario_position[1]) >= 8: #and floor_position[1] <= mario_position[1]:# 
+            print('Changing floor position')
             floor_position = None
             floor_count = 0
 
@@ -272,17 +275,22 @@ class MarioExpert:
             return 4, None
         
         elif floor_count == 3:
-            #self.environment.set_freq(15)
+            #self.environment.set_freq(20)
 
-            if floor_position[1] - mario_position[1] <= 2:
+            if (floor_position[1]-2) - mario_position[1] <= 1:
+                print("Jumping - long section")
+                self.environment.set_freq(40)
+                #while True:
+                    #pass
                 return 4, None
             '''
-            # Moving backward to try and disrupt when mario jumps
-            if mario_position[1] <= 10 and mario_position[1] >= 5 and self.pipe_checker == True:
-                print('Moving backwards')
-                self.pipe_checker = False
-                return 1, None 
-            return 0, None
+            elif self.boolean_toggle == False:
+                print("Going backwards")
+                self.boolean_toggle = True
+                #self.environment.set_freq(40)
+                #while True:
+                    #pass
+                return 1, None
             '''
 
         #return random.randint(0, len(self.environment.valid_actions) - 1)
