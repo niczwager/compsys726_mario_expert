@@ -234,6 +234,8 @@ class MarioExpert:
         dble_gpher_dist = 15
         gphr_pause = 10
 
+        self.environment.set_freq(10)
+
         # If anything in front of Mario - jump
         if current_environment_arr[mario_position[0], mario_position[1]+1] != 0 and goopher_count != 2:
             print('Jumping')
@@ -250,7 +252,8 @@ class MarioExpert:
                 return 4, None
         
         # Speical need to jump over floor case
-        elif current_environment_arr[15, mario_position[1]+2] != 10 and mario_position[0] == 13 and floor_count == 2:
+        elif (current_environment_arr[15, mario_position[1]+2] != 10 and mario_position[0] == 13 and floor_count == 2 or
+        mario_position == [10, 9] and current_environment_arr[13, 12] == 10 and floor_count == 2):
         #elif floor_position[0] == 15 and floor_position[1] <= 12 and floor_position[1] - mario_position[1] >= 2:
             print('Jumping over floor')
             print(current_environment_arr[mario_position[0+1], mario_position[1]+1])
@@ -277,24 +280,9 @@ class MarioExpert:
         elif floor_count == 3:
             self.environment.set_freq(37)
 
-            #while True:
-                #pass
-
             if abs((floor_position[1]-2) - mario_position[1]) <= 1:
                 print("Jumping - long section")
-                self.environment.set_freq(40)
-                #while True:
-                    #pass
                 return 4, None
-            '''
-            elif self.boolean_toggle == False:
-                print("Going backwards")
-                self.boolean_toggle = True
-                #self.environment.set_freq(40)
-                #while True:
-                    #pass
-                return 1, None
-            '''
 
         #return random.randint(0, len(self.environment.valid_actions) - 1)
         return 2, None
