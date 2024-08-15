@@ -275,7 +275,10 @@ class MarioExpert:
             return 4, None
         
         elif floor_count == 3:
-            #self.environment.set_freq(20)
+            self.environment.set_freq(37)
+
+            #while True:
+                #pass
 
             if (floor_position[1]-2) - mario_position[1] <= 1:
                 print("Jumping - long section")
