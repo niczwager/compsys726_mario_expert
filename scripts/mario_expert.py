@@ -280,7 +280,7 @@ class MarioExpert:
             #while True:
                 #pass
 
-            if (floor_position[1]-2) - mario_position[1] <= 1:
+            if abs((floor_position[1]-2) - mario_position[1]) <= 1:
                 print("Jumping - long section")
                 self.environment.set_freq(40)
                 #while True:
