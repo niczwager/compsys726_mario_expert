@@ -243,11 +243,17 @@ class MarioExpert:
             # If anything in front of Mario - jump
             if (current_environment_arr[mario_position[0], mario_position[1]+1] != 0 and goopher_count != 2 or
                 current_environment_arr[mario_position[0], mario_position[1]+1] == 5 and current_environment_arr[mario_position[0]-1, mario_position[1]+1] == 10 or
-                current_environment_arr[mario_position[0], mario_position[1]+1] == 0 and current_environment_arr[mario_position[0]-1, mario_position[1]+1] == 10): 
+                current_environment_arr[mario_position[0], mario_position[1]+1] == 0 and current_environment_arr[mario_position[0]-1, mario_position[1]+1] == 10 or
+                mario_position[0] == 13 and current_environment_arr[mario_position[0]+2, mario_position[1]+1] == 0 and 
+                current_environment_arr[mario_position[0]+2, mario_position[1]+4] == 0): 
                 print('Jumping')
                 
                 print(coin_position)
-
+                
+                if (mario_position[0] == 13 and current_environment_arr[mario_position[0]+2, mario_position[1]+1] == 0 and 
+                current_environment_arr[mario_position[0]+2, mario_position[1]+4] == 0):
+                    self.environment.set_freq(10)
+                
                 if (current_environment_arr[mario_position[0], mario_position[1]+1] == 10 and current_environment_arr[mario_position[0]+1, mario_position[1]] == 10
                     and current_environment_arr[mario_position[0]-1, mario_position[1]+1] == 0 and mario_position[0] == 12):
                     self.environment.set_freq(1)
