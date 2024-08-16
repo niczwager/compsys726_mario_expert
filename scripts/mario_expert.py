@@ -213,15 +213,15 @@ class MarioExpert:
         # Locating Mario's position
         mario_position, _ = self.find_position(current_environment, self.mario_sprite)
 
-        print("Mario's position: " + str(mario_position) + " In front of Mario: " + str(current_environment_arr[mario_position[0], mario_position[1]+1]))
+        #print("Mario's position: " + str(mario_position) + " In front of Mario: " + str(current_environment_arr[mario_position[0], mario_position[1]+1]))
 
         goopher_position, goopher_count = self.find_position(current_environment, self.goopher_sprite)
 
-        print("Current Mario y postion: " + str(mario_position[0]) + " What's below Mario: " + str(current_environment_arr[mario_position[0]+1, mario_position[1]]))
+        #print("Current Mario y postion: " + str(mario_position[0]) + " What's below Mario: " + str(current_environment_arr[mario_position[0]+1, mario_position[1]]))
 
         floor_position, floor_count = self.find_position(current_environment, 0) # Right most position of a floor tile
 
-        print("Floor position is: " + str(floor_position) + " Floor count: " + str(floor_count)) 
+        #print("Floor position is: " + str(floor_position) + " Floor count: " + str(floor_count)) 
 
         # Checking floor is actually in front of Mario and close enough
         if floor_position is not None and abs(floor_position[1]-2 - mario_position[1]) >= 8: #and floor_position[1] <= mario_position[1]:# 
@@ -229,60 +229,88 @@ class MarioExpert:
             floor_position = None
             floor_count = 0
 
-        print("Floor position is: " + str(floor_position) + " Floor count: " + str(floor_count)) 
+        #print("Floor position is: " + str(floor_position) + " Floor count: " + str(floor_count)) 
 
         dble_gpher_dist = 15
         gphr_pause = 10
 
-        self.environment.set_freq(10)
+        if self.environment.act_freq != 1:
+            self.environment.set_freq(10)
 
-        # If anything in front of Mario - jump
-        if current_environment_arr[mario_position[0], mario_position[1]+1] != 0 and goopher_count != 2:
-            print('Jumping')
-            return 4, None # jump
+        coin_position, _ = self.find_position(current_environment, 5)
         
-        # Special double goopher case
-        elif goopher_count == 2 and current_environment_arr[mario_position[0]+1, mario_position[1]] == 10:
-            print("Two gophers")
-            if goopher_position[1][1] - mario_position[1] <= dble_gpher_dist and goopher_position[1][1] - mario_position[1] >= dble_gpher_dist - gphr_pause and goopher_position[1][1] >= mario_position[1] and goopher_position[0][1] >= mario_position[1]:
-                print("Pausing")
-                return 0, None # Do nothing
-            elif current_environment_arr[mario_position[0], mario_position[1]+1] != 0:
-                print('Jumping - in goopher')
-                return 4, None
-        
-        # Speical need to jump over floor case
-        elif (current_environment_arr[15, mario_position[1]+2] != 10 and mario_position[0] == 13 and floor_count == 2 or
-        mario_position == [10, 9] and current_environment_arr[13, 12] == 10 and floor_count == 2):
-        #elif floor_position[0] == 15 and floor_position[1] <= 12 and floor_position[1] - mario_position[1] >= 2:
-            print('Jumping over floor')
-            print(current_environment_arr[mario_position[0+1], mario_position[1]+1])
-            return (4, 30) if current_environment_arr[mario_position[0], mario_position[1]+5] == 10 else (4, None) 
-        
-        # On any pipe small pipe - pause then jump
-        #elif mario_position[0] < 13 and mario_position[0] > 10 and current_environment_arr[mario_position[0]+1, mario_position[1]] == 14:
-        elif current_environment_arr[mario_position[0]+1, mario_position[1]] == 14 and goopher_position is not None:
-            print('Entered pipe jump')
-            if goopher_position[0][1] >= mario_position[1]:
-                print('Entered 2')
-                if abs(goopher_position[0][1] - mario_position[1]) <= 1:
-                    print('Entered 3')
-                    return 4, None
-                else:
-                    print('Entered 4')
-                    return 0, None
+        if mario_position[1] < 16:
+            # If anything in front of Mario - jump
+            if (current_environment_arr[mario_position[0], mario_position[1]+1] != 0 and goopher_count != 2 or
+                current_environment_arr[mario_position[0], mario_position[1]+1] == 5 and current_environment_arr[mario_position[0]-1, mario_position[1]+1] == 10 or
+                current_environment_arr[mario_position[0], mario_position[1]+1] == 0 and current_environment_arr[mario_position[0]-1, mario_position[1]+1] == 10): 
+                print('Jumping')
                 
-        # Bouncy bug bitches in front of Mario
-        elif current_environment_arr[mario_position[0]-2, mario_position[1]+4] == 18:
-            print('Avoiding bug bitches')
-            return 4, None
-        
-        elif floor_count == 3:
-            self.environment.set_freq(37)
+                print(coin_position)
 
-            if abs((floor_position[1]-2) - mario_position[1]) <= 1:
-                print("Jumping - long section")
+                if (current_environment_arr[mario_position[0], mario_position[1]+1] == 10 and current_environment_arr[mario_position[0]+1, mario_position[1]] == 10
+                    and current_environment_arr[mario_position[0]-1, mario_position[1]+1] == 0 and mario_position[0] == 12):
+                    self.environment.set_freq(1)
+                    #while True:
+                        #pass
+                '''
+                if current_environment_arr[mario_position[0], mario_position[1]+1] == 0 and current_environment_arr[mario_position[0]-1, mario_position[1]+1] == 10:
+                    print('smelly balls')
+                    #while True:
+                        #pass
+                
+                if current_environment_arr[mario_position[0], mario_position[1]+1] == 5 and current_environment_arr[mario_position[0]-1, mario_position[1]+1] == 10:
+                    while True:
+                        pass
+                '''
+                return 4, None # jump
+            
+            # Special double goopher case
+            elif goopher_count == 2 and current_environment_arr[mario_position[0]+1, mario_position[1]] == 10:
+                print("Two gophers")
+                if goopher_position[1][1] - mario_position[1] <= dble_gpher_dist and goopher_position[1][1] - mario_position[1] >= dble_gpher_dist - gphr_pause and goopher_position[1][1] >= mario_position[1] and goopher_position[0][1] >= mario_position[1]:
+                    print("Pausing")
+                    return 0, None # Do nothing
+                elif current_environment_arr[mario_position[0], mario_position[1]+1] != 0:
+                    print('Jumping - in goopher')
+                    return 4, None
+            
+            # Speical need to jump over floor case
+            elif (current_environment_arr[15, mario_position[1]+2] != 10 and mario_position[0] == 13 and floor_count == 2 or
+            mario_position == [10,9] and floor_position is not None and floor_count == 2 and abs(floor_position[1]-1 - mario_position[1]) <= 1 and
+            current_environment_arr[mario_position[0]+1, mario_position[1]] == 10):
+                
+                if (mario_position == [10,9] and floor_position is not None and floor_count == 2 and abs(floor_position[1]-1 - mario_position[1]) <= 1
+                    and current_environment_arr[mario_position[0]+1, mario_position[1]] == 10):
+                    self.environment.set_freq(3)
+                    return 4, None
+                
+                return (4, 30) if current_environment_arr[mario_position[0], mario_position[1]+5] == 10 else (4, None) 
+            
+            # On any pipe small pipe - pause then jump
+            #elif mario_position[0] < 13 and mario_position[0] > 10 and current_environment_arr[mario_position[0]+1, mario_position[1]] == 14:
+            elif current_environment_arr[mario_position[0]+1, mario_position[1]] == 14 and goopher_position is not None:
+                print('Entered pipe jump')
+                if goopher_position[0][1] >= mario_position[1]:
+                    print('Entered 2')
+                    if abs(goopher_position[0][1] - mario_position[1]) <= 1:
+                        print('Entered 3')
+                        return 4, None
+                    else:
+                        print('Entered 4')
+                        return 0, None
+                    
+            # Bouncy bug bitches in front of Mario
+            elif mario_position[1] < 19-4 and current_environment_arr[mario_position[0]-2, mario_position[1]+4] == 18:
+                print('Avoiding bug bitches')
                 return 4, None
+            
+            elif floor_count == 3:
+                self.environment.set_freq(37)
+
+                if abs((floor_position[1]-2) - mario_position[1]) <= 1:
+                    print("Jumping - long section")
+                    return 4, None
 
         #return random.randint(0, len(self.environment.valid_actions) - 1)
         return 2, None
