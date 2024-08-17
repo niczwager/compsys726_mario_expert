@@ -197,8 +197,17 @@ class MarioExpert:
         return sprite_position, count
 
     def choose_action(self):
+        rate = 0.2
         # For debugging
-        #time.sleep(0.01)
+        
+        if self.environment.act_freq != 10:
+            time.sleep(rate/10)
+        elif self.environment.act_freq == 37:
+            time.sleep(rate/37)
+        else:
+            time.sleep(rate)
+        
+        #time.sleep(rate/self.environment.act_freq)
 
         state = self.environment.game_state()
         frame = self.environment.grab_frame()
